@@ -1,0 +1,11 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: #E0D9D9;
+  font-family: 'Inter', sans-serif;
+}
+
+.lead-name-cell:hover .lead-note-hint {
+  opacity: 1 !important;
+}

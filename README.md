@@ -47,17 +47,17 @@
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 18, Vite, React Router v6 |
-| **UI Library** | Mantine UI v7 |
-| **Icons** | Tabler Icons React |
-| **HTTP Client** | Axios |
-| **Backend** | Node.js, Express.js |
-| **Database** | PostgreSQL 14+ via `pg` (node-postgres) |
-| **Authentication** | JWT (`jsonwebtoken`), bcryptjs |
-| **State / Storage** | React useState/useMemo, localStorage |
-| **Font** | Inter (Google Fonts) |
+| Layer               | Technology                              |
+| ------------------- | --------------------------------------- |
+| **Frontend**        | React 18, Vite, React Router v6         |
+| **UI Library**      | Mantine UI v7                           |
+| **Icons**           | Tabler Icons React                      |
+| **HTTP Client**     | Axios                                   |
+| **Backend**         | Node.js, Express.js                     |
+| **Database**        | PostgreSQL 14+ via `pg` (node-postgres) |
+| **Authentication**  | JWT (`jsonwebtoken`), bcryptjs          |
+| **State / Storage** | React useState/useMemo, localStorage    |
+| **Font**            | Inter (Google Fonts)                    |
 
 ---
 
@@ -108,6 +108,7 @@ node server.js
 ```
 
 Expected output:
+
 ```
 Seed user created: admin@example.com / password123
 Seed leads inserted.
@@ -157,16 +158,16 @@ VITE_API_URL=http://localhost:5000
 
 ### Default Login
 
-| Field | Value |
-|---|---|
-| Email | `admin@example.com` |
-| Password | `password123` |
+| Field    | Value               |
+| -------- | ------------------- |
+| Email    | `admin@example.com` |
+| Password | `password123`       |
 
 ### Quick Start
 
 1. Open `http://localhost:5173`
 2. Sign in with the default credentials above
-3. Navigate to **Leads** to see the 10 seed Sri Lankan leads
+3. Navigate to **Leads** to see the leads
 4. Click any lead name to open the **Lead Detail** page with notes and pipeline timeline
 5. Use the **Filter** button in the toolbar to filter by status, source, or deal value
 6. Visit **Dashboard** for pipeline analytics and team performance
@@ -260,37 +261,37 @@ crm-app/
 
 ### Authentication
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `POST` | `/api/auth/login` | Login with email + password | No |
-| `GET` | `/api/auth/me` | Get current user from token | Yes |
+| Method | Endpoint          | Description                 | Auth |
+| ------ | ----------------- | --------------------------- | ---- |
+| `POST` | `/api/auth/login` | Login with email + password | No   |
+| `GET`  | `/api/auth/me`    | Get current user from token | Yes  |
 
 ### Leads
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `GET` | `/api/leads` | List all leads (supports `status`, `source`, `assigned_to`, `search`) | Yes |
-| `GET` | `/api/leads/:id` | Get single lead | Yes |
-| `POST` | `/api/leads` | Create lead | Yes |
-| `PUT` | `/api/leads/:id` | Update lead | Yes |
-| `DELETE` | `/api/leads/:id` | Delete lead (notes cascade) | Yes |
+| Method   | Endpoint         | Description                                                           | Auth |
+| -------- | ---------------- | --------------------------------------------------------------------- | ---- |
+| `GET`    | `/api/leads`     | List all leads (supports `status`, `source`, `assigned_to`, `search`) | Yes  |
+| `GET`    | `/api/leads/:id` | Get single lead                                                       | Yes  |
+| `POST`   | `/api/leads`     | Create lead                                                           | Yes  |
+| `PUT`    | `/api/leads/:id` | Update lead                                                           | Yes  |
+| `DELETE` | `/api/leads/:id` | Delete lead (notes cascade)                                           | Yes  |
 
 ### Notes
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `GET` | `/api/leads/:id/notes` | Get all notes for a lead | Yes |
-| `POST` | `/api/leads/:id/notes` | Add a note | Yes |
-| `DELETE` | `/api/leads/:leadId/notes/:id` | Delete a note | Yes |
+| Method   | Endpoint                       | Description              | Auth |
+| -------- | ------------------------------ | ------------------------ | ---- |
+| `GET`    | `/api/leads/:id/notes`         | Get all notes for a lead | Yes  |
+| `POST`   | `/api/leads/:id/notes`         | Add a note               | Yes  |
+| `DELETE` | `/api/leads/:leadId/notes/:id` | Delete a note            | Yes  |
 
 ### Dashboard
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `GET` | `/api/dashboard/stats` | Pipeline KPI counts + deal values | Yes |
-| `GET` | `/api/dashboard/recent-leads` | Last 5 leads added | Yes |
-| `GET` | `/api/dashboard/top-sales` | Top salespeople by won value | Yes |
-| `GET` | `/api/dashboard/monthly` | Lead counts per month (last 6 months) | Yes |
+| Method | Endpoint                      | Description                           | Auth |
+| ------ | ----------------------------- | ------------------------------------- | ---- |
+| `GET`  | `/api/dashboard/stats`        | Pipeline KPI counts + deal values     | Yes  |
+| `GET`  | `/api/dashboard/recent-leads` | Last 5 leads added                    | Yes  |
+| `GET`  | `/api/dashboard/top-sales`    | Top salespeople by won value          | Yes  |
+| `GET`  | `/api/dashboard/monthly`      | Lead counts per month (last 6 months) | Yes  |
 
 ---
 
@@ -298,24 +299,24 @@ crm-app/
 
 The application has **17 error handling points** across the stack:
 
-| Layer | Mechanism | Purpose |
-|---|---|---|
-| Backend | Global `errorHandler` middleware | Catches all unhandled errors → 500 JSON |
-| Backend | `authMiddleware` | Missing/expired token → 401 |
-| Backend | `authController` | Wrong credentials → 401 |
-| Backend | `leadController` | Missing lead name → 400, not found → 404 |
-| Backend | `noteController` | Empty content → 400, fallback author |
-| Backend | `db.js` pool listener | DB connection loss → logged, server stays up |
-| Backend | `server.js` startup | DB unreachable → clean exit with message |
-| Frontend | `api.js` response interceptor | 401 → auto-logout + redirect to `/login` |
-| Frontend | `App.jsx` route guards | Unauthenticated → redirect to login |
-| Frontend | `SignInPage` | Wrong credentials → red alert |
-| Frontend | `LeadDetailPage` | Load failure → full-page alert |
-| Frontend | `LeadForm` | Save failure → error inside modal |
-| Frontend | `LeadNotes` | Load/save failure → alert + Retry button |
-| Frontend | `DashboardPage` | `Promise.allSettled` → partial load on failure |
-| Frontend | `LeadsPage` | Delete failure → dismissible alert |
-| Frontend | `usePipelineHistory` | Corrupted localStorage → empty fallback |
+| Layer    | Mechanism                        | Purpose                                        |
+| -------- | -------------------------------- | ---------------------------------------------- |
+| Backend  | Global `errorHandler` middleware | Catches all unhandled errors → 500 JSON        |
+| Backend  | `authMiddleware`                 | Missing/expired token → 401                    |
+| Backend  | `authController`                 | Wrong credentials → 401                        |
+| Backend  | `leadController`                 | Missing lead name → 400, not found → 404       |
+| Backend  | `noteController`                 | Empty content → 400, fallback author           |
+| Backend  | `db.js` pool listener            | DB connection loss → logged, server stays up   |
+| Backend  | `server.js` startup              | DB unreachable → clean exit with message       |
+| Frontend | `api.js` response interceptor    | 401 → auto-logout + redirect to `/login`       |
+| Frontend | `App.jsx` route guards           | Unauthenticated → redirect to login            |
+| Frontend | `SignInPage`                     | Wrong credentials → red alert                  |
+| Frontend | `LeadDetailPage`                 | Load failure → full-page alert                 |
+| Frontend | `LeadForm`                       | Save failure → error inside modal              |
+| Frontend | `LeadNotes`                      | Load/save failure → alert + Retry button       |
+| Frontend | `DashboardPage`                  | `Promise.allSettled` → partial load on failure |
+| Frontend | `LeadsPage`                      | Delete failure → dismissible alert             |
+| Frontend | `usePipelineHistory`             | Corrupted localStorage → empty fallback        |
 
 ---
 
@@ -348,14 +349,14 @@ git push origin feature/your-feature-name
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Prefix | Use for |
-|---|---|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `docs:` | Documentation only |
-| `style:` | Formatting, no logic change |
+| Prefix      | Use for                             |
+| ----------- | ----------------------------------- |
+| `feat:`     | New feature                         |
+| `fix:`      | Bug fix                             |
+| `docs:`     | Documentation only                  |
+| `style:`    | Formatting, no logic change         |
 | `refactor:` | Code restructure, no feature change |
-| `chore:` | Build process, dependencies |
+| `chore:`    | Build process, dependencies         |
 
 ---
 
@@ -387,11 +388,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 ## Contact
 
-**[YOUR NAME]**
-
-- Email: [your-email@example.com]
-- GitHub: [@your-github-username](https://github.com/your-github-username)
-- LinkedIn: [your-linkedin-profile]
+- Email: yeshikabandara@gmail.com
+- GitHub: yeshi-2001 https://share.google/Q8JyAKNsfiyOCfnAE
 
 ---
 
@@ -402,7 +400,3 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 - [node-postgres](https://node-postgres.com/) — PostgreSQL client for Node.js
 - [Vite](https://vitejs.dev/) — Frontend build tool
 - [Express.js](https://expressjs.com/) — Backend framework
-
----
-
-<p align="center">Built with ❤️ for Sri Lankan businesses</p>

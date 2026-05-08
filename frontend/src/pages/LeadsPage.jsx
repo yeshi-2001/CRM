@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Stack, Alert } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useLeads } from '../hooks/useLeads';
@@ -11,8 +11,6 @@ import { ConfirmModal } from '../components/common/ConfirmModal';
 export function LeadsPage() {
   const [clientFilters,    setClientFilters]    = useState([]);
   const [filterLogic,      setFilterLogic]      = useState('AND');
-  const [debouncedFilters, setDebouncedFilters] = useState({});
-  const [serverParams,     setServerParams]     = useState({});
   const [hiddenStatuses,   setHiddenStatuses]   = useState([]);
   const [groupField,       setGroupField]       = useState('');
   const [sortConfig,       setSortConfig]       = useState(null);
@@ -24,18 +22,11 @@ export function LeadsPage() {
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
 
   const handleFiltersChange = (payload) => {
-    const cf    = payload?.clientFilters || [];
-    const logic = payload?.logic || 'AND';
-    setClientFilters(cf);
-    setFilterLogic(logic);
+    setClientFilters(payload?.clientFilters || []);
+    setFilterLogic(payload?.logic || 'AND');
   };
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedFilters(serverParams), 300);
-    return () => clearTimeout(t);
-  }, [serverParams]);
-
-  const { leads, loading, error, refetch } = useLeads(debouncedFilters);
+  const { leads, loading, error, refetch } = useLeads({});
 
   const handleEdit = (lead) => { setSelectedLead(lead); openForm(); };
   const handleAdd  = ()     => { setSelectedLead(null);  openForm(); };

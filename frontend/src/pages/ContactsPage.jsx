@@ -69,7 +69,7 @@ function ToolBtn({ icon: Icon, label, active, onClick }) {
 }
 
 export function ContactsPage() {
-  const { contacts, addContact, updateContact, deleteContact, addNote, deleteNote, getNotesFor } = useContacts();
+  const { contacts, loading, error, addContact, updateContact, deleteContact, addNote, deleteNote, getNotesFor, refetch } = useContacts();
   const { user } = useAuth();
 
   const [view,             setView]             = useState('grid');
@@ -121,21 +121,32 @@ export function ContactsPage() {
   const handleAdd    = () => { setEditContact(null); openForm(); };
   const handleEdit   = (c) => { setEditContact(c);   openForm(); };
 
-  const handleSubmit = (values) => {
-    if (editContact?.id) {
-      updateContact(editContact.id, values);
-      showToast('Contact updated successfully');
-      if (detailContact?.id === editContact.id) setDetailContact({ ...detailContact, ...values });
-    } else {
-      addContact(values);
-      showToast('Contact added successfully');
+  const handleSubmit = async (values) => {
+    try {
+      if (editContact?.id) {
+        await updateContact(editContact.id, values);
+        showToast('Contact updated successfully');
+        if (detailContact?.id === editContact.id) {
+          const updated = { ...detailContact, ...values, assigned_to: values.assignedTo || values.assigned_to };
+          setDetailContact(updated);
+        }
+      } else {
+        await addContact(values);
+        showToast('Contact added successfully');
+      }
+    } catch {
+      showToast('Failed to save contact');
     }
   };
 
-  const handleDelete = (id) => {
-    deleteContact(id);
-    showToast('Contact deleted');
-    if (detailContact?.id === id) setDetailContact(null);
+  const handleDelete = async (id) => {
+    try {
+      await deleteContact(id);
+      showToast('Contact deleted');
+      if (detailContact?.id === id) setDetailContact(null);
+    } catch {
+      showToast('Failed to delete contact');
+    }
   };
 
   if (detailContact) {
@@ -144,12 +155,12 @@ export function ContactsPage() {
       <Box px="xl" py="md">
         <ContactDetail
           contact={fresh}
-          notes={getNotesFor(fresh.id)}
           onBack={() => setDetailContact(null)}
           onEdit={(c) => { setEditContact(c); openForm(); }}
           onDelete={handleDelete}
-          onAddNote={(id, content, by) => { addNote(id, content, by); showToast('Note added'); }}
+          onAddNote={addNote}
           onDeleteNote={deleteNote}
+          getNotesFor={getNotesFor}
           currentUser={user?.name || 'Admin'}
         />
         <ContactForm opened={formOpened} onClose={closeForm} contact={editContact} onSubmit={handleSubmit} />
@@ -353,7 +364,7 @@ export function ContactsPage() {
                   <Table.Td><Text fz={12} c="dimmed">{c.location || '—'}</Text></Table.Td>
                   <Table.Td><Text fz={12}>{c.email || '—'}</Text></Table.Td>
                   <Table.Td><Text fz={12}>{c.phone || '—'}</Text></Table.Td>
-                  <Table.Td><Text fz={12} c="dimmed">{formatDate(c.createdAt)}</Text></Table.Td>
+                  <Table.Td><Text fz={12} c="dimmed">{formatDate(c.created_at || c.createdAt)}</Text></Table.Td>
                   <Table.Td>
                     <Group gap={4}>
                       <ActionIcon size={26} variant="subtle" onClick={() => setDetailContact(c)}><IconEye size={14} color="#628141" /></ActionIcon>
@@ -386,8 +397,8 @@ export function ContactsPage() {
                   <Table.Td><Text fz={12}>{c.email || '—'}</Text></Table.Td>
                   <Table.Td><Text fz={12}>{c.phone || '—'}</Text></Table.Td>
                   <Table.Td><Text fz={12}>{c.location || '—'}</Text></Table.Td>
-                  <Table.Td><Text fz={12}>{c.assignedTo || '—'}</Text></Table.Td>
-                  <Table.Td><Text fz={12} c="dimmed">{formatDate(c.createdAt)}</Text></Table.Td>
+                  <Table.Td><Text fz={12}>{c.assigned_to || c.assignedTo || '—'}</Text></Table.Td>
+                  <Table.Td><Text fz={12} c="dimmed">{formatDate(c.created_at || c.createdAt)}</Text></Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>

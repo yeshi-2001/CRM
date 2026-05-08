@@ -3,7 +3,7 @@ import { useForm } from '@mantine/form';
 import { useState, useEffect } from 'react';
 import { leadService } from '../../services/leadService';
 import { LEAD_STATUSES, LEAD_SOURCES } from '../../utils/constants';
-import { appendHistory } from '../../hooks/usePipelineHistory';
+import api from '../../services/api';
 
 export function LeadForm({ opened, onClose, lead, onSuccess }) {
   const [error, setError] = useState(null);
@@ -46,16 +46,58 @@ export function LeadForm({ opened, onClose, lead, onSuccess }) {
       if (lead?.id) {
         // Log history if status changed
         if (lead.status && values.status && lead.status !== values.status) {
-          appendHistory(lead.id, lead.status, values.status, 'Admin');
+          await api.post(`/api/leads/${lead.id}/history`, {
+            from_status: lead.status,
+            to_status:   values.status,
+            changed_by:  'Admin',
+          }).catch(() => {});
         }
         await leadService.update(lead.id, values);
+
+        // Sync contact — update if exists by email
+        if (values.email) {
+          const { data: contacts } = await api.get('/api/contacts').catch(() => ({ data: [] }));
+          const existing = contacts.find(c => c.email === values.email);
+          if (existing) {
+            await api.put(`/api/contacts/${existing.id}`, {
+              name:        values.lead_name,
+              company:     values.company_name,
+              email:       values.email,
+              phone:       values.phone,
+              location:    existing.location || '',
+              category:    existing.category || 'Customer',
+              assigned_to: values.assigned_to,
+            }).catch(() => {});
+          }
+        }
       } else {
         const created = await leadService.create(values);
-        // Log creation entry
+
+        // Log creation history
         if (created?.id) {
-          appendHistory(created.id, null, values.status || 'New', 'Admin');
+          await api.post(`/api/leads/${created.id}/history`, {
+            from_status: null,
+            to_status:   values.status || 'New',
+            changed_by:  'Admin',
+          }).catch(() => {});
+        }
+
+        // Auto-create contact from lead data
+        const { data: contacts } = await api.get('/api/contacts').catch(() => ({ data: [] }));
+        const alreadyExists = values.email && contacts.find(c => c.email === values.email);
+        if (!alreadyExists) {
+          await api.post('/api/contacts', {
+            name:        values.lead_name,
+            company:     values.company_name,
+            email:       values.email,
+            phone:       values.phone,
+            location:    '',
+            category:    'Customer',
+            assigned_to: values.assigned_to,
+          }).catch(() => {});
         }
       }
+
       onSuccess();
       onClose();
     } catch (err) {

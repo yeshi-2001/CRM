@@ -4,7 +4,7 @@ import { IconPencil, IconTrash, IconHistory } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { LeadStatusBadge } from './LeadStatusBadge';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { getLeadHistory, STATUS_HEX } from '../../hooks/usePipelineHistory';
+import { useLeadHistory, STATUS_HEX } from '../../hooks/usePipelineHistory';
 
 const FIELD_LABELS = {
   status:      'Status',
@@ -28,13 +28,14 @@ function groupLeads(leads, field) {
 
 // ── Inline history panel ──────────────────────────────────────────────────────
 function HistoryPanel({ leadId }) {
-  const history = getLeadHistory(leadId);
-  if (history.length === 0) {
-    return <Text fz={11} c="dimmed" p="xs">No history recorded.</Text>;
-  }
+  const { history, loading } = useLeadHistory(leadId);
+
+  if (loading) return <Text fz={11} c="dimmed" p="xs">Loading...</Text>;
+  if (history.length === 0) return <Text fz={11} c="dimmed" p="xs">No history recorded.</Text>;
+
   return (
     <Box p="xs">
-      {history.map((entry, i) => {
+      {history.map((entry) => {
         const color = STATUS_HEX[entry.to] || '#6b7280';
         return (
           <Group key={entry.id} gap={8} mb={6} wrap="nowrap">

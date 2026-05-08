@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box, Group, Button, Avatar, Text, Badge, Stack,
   Paper, SimpleGrid, Textarea, ActionIcon, Divider, ScrollArea,
 } from '@mantine/core';
-import { IconPencil, IconTrash, IconX } from '@tabler/icons-react';
+import { IconX } from '@tabler/icons-react';
 import { formatDate, formatTime } from '../../utils/formatters';
 import { ConfirmModal } from '../common/ConfirmModal';
 
@@ -26,23 +26,42 @@ function Field({ label, value }) {
   );
 }
 
-export function ContactDetail({ contact, notes, onBack, onEdit, onDelete, onAddNote, onDeleteNote, currentUser }) {
-  const [noteText,     setNoteText]     = useState('');
-  const [confirmOpen,  setConfirmOpen]  = useState(false);
+export function ContactDetail({ contact, onBack, onEdit, onDelete, onAddNote, onDeleteNote, getNotesFor, currentUser }) {
+  const [notes,       setNotes]       = useState([]);
+  const [noteText,    setNoteText]    = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving,      setSaving]      = useState(false);
+
   const colors = CATEGORY_COLORS[contact.category] || CATEGORY_COLORS.Customer;
 
-  const handleAddNote = () => {
+  const fetchNotes = async () => {
+    try {
+      const data = await getNotesFor(contact.id);
+      setNotes(data);
+    } catch { setNotes([]); }
+  };
+
+  useEffect(() => { fetchNotes(); }, [contact.id]);
+
+  const handleAddNote = async () => {
     if (!noteText.trim()) return;
-    onAddNote(contact.id, noteText.trim(), currentUser);
-    setNoteText('');
+    setSaving(true);
+    try {
+      await onAddNote(contact.id, noteText.trim(), currentUser);
+      setNoteText('');
+      fetchNotes();
+    } finally { setSaving(false); }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    await onDeleteNote(contact.id, noteId);
+    fetchNotes();
   };
 
   return (
     <Box>
-      {/* Header */}
       <Group justify="space-between" mb="lg">
-        <Button variant="subtle" onClick={onBack}
-          style={{ color: '#628141' }}>
+        <Button variant="subtle" onClick={onBack} style={{ color: '#628141' }}>
           Back to Contacts
         </Button>
         <Group gap="xs">
@@ -50,14 +69,13 @@ export function ContactDetail({ contact, notes, onBack, onEdit, onDelete, onAddN
             style={{ borderColor: '#628141', color: '#628141' }} onClick={() => onEdit(contact)}>
             Edit
           </Button>
-          <Button size="xs" variant="outline" color="red"
-            onClick={() => setConfirmOpen(true)}>
+          <Button size="xs" variant="outline" color="red" onClick={() => setConfirmOpen(true)}>
             Delete
           </Button>
         </Group>
       </Group>
 
-      <Group gap="xl" align="flex-start" wrap="nowrap" style={{ '@media(max-width:768px)': { flexDirection: 'column' } }}>
+      <Group gap="xl" align="flex-start" wrap="nowrap">
         {/* Left — details */}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Paper p="lg" radius="md" style={{ background: 'rgba(224,217,217,0.4)', border: '1px solid #e8e8e8' }}>
@@ -74,37 +92,13 @@ export function ContactDetail({ contact, notes, onBack, onEdit, onDelete, onAddN
               </Stack>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-              <Field label="Email"        value={contact.email} />
-              <Field label="Phone"        value={contact.phone} />
-              <Field label="Location"     value={contact.location} />
-              <Field label="Company"      value={contact.company} />
-              <Field label="Assigned To"  value={contact.assignedTo} />
-              <Field label="Date Added"   value={formatDate(contact.createdAt)} />
-              <Field label="Last Updated" value={formatDate(contact.updatedAt)} />
+              <Field label="Email"       value={contact.email} />
+              <Field label="Phone"       value={contact.phone} />
+              <Field label="Location"    value={contact.location} />
+              <Field label="Company"     value={contact.company} />
+              <Field label="Assigned To" value={contact.assigned_to || contact.assignedTo} />
+              <Field label="Date Added"  value={formatDate(contact.created_at || contact.createdAt)} />
             </SimpleGrid>
-          </Paper>
-
-          {/* Activity timeline */}
-          <Paper p="lg" radius="md" mt="md" style={{ background: 'rgba(224,217,217,0.4)', border: '1px solid #e8e8e8' }}>
-            <Text fw={600} fz={14} c="#1B211A" mb="md">Activity</Text>
-            <Stack gap="xs">
-              {notes.map(n => (
-                <Group key={n.id} gap="sm" align="flex-start">
-                  <Box style={{ width: 8, height: 8, borderRadius: '50%', background: '#628141', marginTop: 5, flexShrink: 0 }} />
-                  <Box style={{ flex: 1 }}>
-                    <Text fz={12} c="#444">Note added by <Text component="span" fw={600}>{n.createdBy}</Text></Text>
-                    <Text fz={11} c="dimmed">{formatDate(n.createdAt)} · {formatTime(n.createdAt)}</Text>
-                  </Box>
-                </Group>
-              ))}
-              <Group gap="sm" align="flex-start">
-                <Box style={{ width: 8, height: 8, borderRadius: '50%', background: '#8BAE66', marginTop: 5, flexShrink: 0 }} />
-                <Box>
-                  <Text fz={12} c="#444">Contact created</Text>
-                  <Text fz={11} c="dimmed">{formatDate(contact.createdAt)}</Text>
-                </Box>
-              </Group>
-            </Stack>
           </Paper>
         </Box>
 
@@ -113,7 +107,7 @@ export function ContactDetail({ contact, notes, onBack, onEdit, onDelete, onAddN
           <Paper p="lg" radius="md" style={{ background: 'rgba(224,217,217,0.4)', border: '1px solid #e8e8e8' }}>
             <Group justify="space-between" mb="md">
               <Text fw={600} fz={14} c="#1B211A">Notes</Text>
-              <Badge color="forest" variant="filled" size="sm">{notes.length}</Badge>
+              <Badge color="green" variant="filled" size="sm">{notes.length}</Badge>
             </Group>
 
             <ScrollArea h={300} mb="md">
@@ -121,14 +115,16 @@ export function ContactDetail({ contact, notes, onBack, onEdit, onDelete, onAddN
                 {notes.length === 0 && <Text fz={12} c="dimmed">No notes yet.</Text>}
                 {notes.map(n => (
                   <Paper key={n.id} p="sm" radius="sm"
-                    style={{ background: '#fff', borderLeft: '3px solid #628141', border: '1px solid #eee', borderLeft: '3px solid #628141' }}>
+                    style={{ background: '#fff', borderLeft: '3px solid #628141', border: '1px solid #eee' }}>
                     <Group justify="space-between" align="flex-start">
                       <Text fz={12} c="#1B211A" style={{ flex: 1, whiteSpace: 'pre-wrap' }}>{n.content}</Text>
-                      <ActionIcon size={18} variant="subtle" color="red" onClick={() => onDeleteNote(contact.id, n.id)}>
+                      <ActionIcon size={18} variant="subtle" color="red" onClick={() => handleDeleteNote(n.id)}>
                         <IconX size={12} />
                       </ActionIcon>
                     </Group>
-                    <Text fz={11} c="dimmed" mt={4}>{n.createdBy} · {formatDate(n.createdAt)}</Text>
+                    <Text fz={11} c="dimmed" mt={4}>
+                      {n.created_by} · {formatDate(n.created_at)} {formatTime(n.created_at)}
+                    </Text>
                   </Paper>
                 ))}
               </Stack>
@@ -143,7 +139,9 @@ export function ContactDetail({ contact, notes, onBack, onEdit, onDelete, onAddN
               mb="sm"
               styles={{ input: { fontSize: 13 } }}
             />
-            <Button fullWidth size="xs" style={{ background: '#628141', color: '#fff' }} onClick={handleAddNote}>
+            <Button fullWidth size="xs" loading={saving}
+              style={{ background: '#628141', color: '#fff' }}
+              onClick={handleAddNote}>
               Add Note
             </Button>
           </Paper>

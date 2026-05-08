@@ -122,6 +122,8 @@ export function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState([]);
   const [topSales,    setTopSales]    = useState([]);
   const [monthly,     setMonthly]     = useState([]);
+  const [avgClose,    setAvgClose]    = useState(null);
+  const [stageVel,    setStageVel]    = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
 
@@ -139,6 +141,9 @@ export function DashboardPage() {
       if (t.status === 'fulfilled') setTopSales(t.value.data);
       if (m.status === 'fulfilled') setMonthly(m.value.data);
       if (s.status === 'rejected') setError('Failed to load dashboard stats');
+      // Fetch analytics async separately
+      calcAvgTimeToClose().then(setAvgClose).catch(() => {});
+      calcStageVelocity().then(setStageVel).catch(() => {});
     } catch {
       setError('Failed to load dashboard data');
     } finally {
@@ -247,14 +252,14 @@ export function DashboardPage() {
         <Paper p="md" radius="lg" style={{ background: '#fff', boxShadow: '0 1px 8px rgba(0,0,0,0.07)', border: '1px solid #f0f0f0', borderTop: '3px solid #628141' }}>
           <Text fz={11} fw={600} c="#9ca3af" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }} mb={4}>Avg. Time to Close</Text>
           <Text fz={26} fw={800} c="#628141">
-            {calcAvgTimeToClose() !== null ? `${calcAvgTimeToClose()} days` : '—'}
+            {avgClose !== null ? `${avgClose} days` : '—'}
           </Text>
           <Text fz={11} c="#9ca3af" mt={2}>Average days from created to Won</Text>
         </Paper>
         <Paper p="md" radius="lg" style={{ background: '#fff', boxShadow: '0 1px 8px rgba(0,0,0,0.07)', border: '1px solid #f0f0f0', borderTop: '3px solid #d97706' }}>
           <Text fz={11} fw={600} c="#9ca3af" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }} mb={4}>Stage Velocity</Text>
           <Text fz={18} fw={800} c="#d97706">
-            {calcStageVelocity() ? `Most time in: ${calcStageVelocity()}` : '—'}
+            {stageVel ? `Most time in: ${stageVel}` : '—'}
           </Text>
           <Text fz={11} c="#9ca3af" mt={2}>Stage where leads spend the most time</Text>
         </Paper>

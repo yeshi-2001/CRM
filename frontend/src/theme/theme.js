@@ -15,43 +15,6 @@ const theme = createTheme({
       '#8BAE66', '#769755', '#618044', '#4c6933', '#375222',
     ],
   },
-
-  components: {
-    AppShell: {
-      styles: {
-        navbar: { backgroundColor: '#1B211A' },
-      },
-    },
-    NavLink: {
-      styles: (theme, { active }) =>
-        active
-          ? {
-              root: {
-                borderLeft: '3px solid #628141',
-                color: '#8BAE66',
-                backgroundColor: 'rgba(98,129,65,0.15)',
-              },
-            }
-          : {},
-    },
-    Button: {
-      styles: (theme, { variant }) =>
-        variant === 'filled'
-          ? {
-              root: {
-                backgroundColor: '#628141',
-                color: '#fff',
-                '&:hover': { backgroundColor: '#8BAE66' },
-              },
-            }
-          : {},
-    },
-    Paper: {
-      defaultProps: {
-        style: { backgroundColor: 'rgba(224,217,217,0.6)' },
-      },
-    },
-  },
 });
 
 export default theme;

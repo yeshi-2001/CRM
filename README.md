@@ -393,6 +393,27 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 ---
 
+## Known Limitations
+
+- No multi-user role support — only a single admin account is seeded; there is no role-based access control (RBAC)
+- Assignees are hardcoded in the filter dropdown (`Sarah Chen`, `Mike Torres`, `Priya Nair`) and not dynamically pulled from a users table
+- No pagination — all leads are loaded at once, which may affect performance with large datasets
+- Pipeline history is seeded automatically on first visit; manual history edits are not supported
+- No email notifications or reminders for lead follow-ups
+- The date filter on the Dashboard (All Time / Last 30 Days / This Month) is UI-only and does not filter the actual data
+- No file/attachment support on leads or notes
+- Contacts are auto-created from leads but cannot be independently created from the Contacts page form in all cases
+
+---
+
+## Reflection
+
+Developing this CRM and Lead Management System helped me improve my full-stack development skills using React, Node.js, Express, and PostgreSQL. During the project, I learned how to build reusable UI components, manage APIs, implement authentication, and handle real-world business logic such as pipeline tracking and lead management. One of the main challenges was managing complex filtering and pipeline history updates, but solving those problems improved my understanding of frontend-backend integration and application architecture. Overall, this project gave me valuable hands-on experience in building scalable and user-friendly web applications.
+
+One major challenge I faced during this project was implementing the advanced filtering system for the Leads page. The filter panel needed to support multiple conditions, different operators, and AND/OR logic while keeping the UI responsive and easy to use. Initially, managing all the filter states and applying them correctly caused bugs and performance issues. To solve this, I redesigned the filtering logic using reusable functions and React's useMemo hook to optimize performance. After testing different scenarios and fixing edge cases, I was able to create a stable and flexible filtering system that works smoothly for users.
+
+---
+
 ## Acknowledgements
 
 - [Mantine UI](https://mantine.dev/) — React component library
